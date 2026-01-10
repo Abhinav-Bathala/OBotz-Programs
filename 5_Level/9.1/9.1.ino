@@ -1,0 +1,18 @@
+#include <avr/io.h>
+#include <util/delay.h> 
+int main(void)
+{
+  DDRD = 0xFB;
+  while(1)
+  {
+  if(PIND & 0x04)
+    {
+      PORTD = 0x01;
+      _delay_ms(500);
+    }
+  else
+    {
+      PORTD = 0x00;
+    }
+  }
+}
