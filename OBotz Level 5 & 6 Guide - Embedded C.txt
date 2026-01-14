@@ -1,0 +1,970 @@
+FULL GUIDE FOR LEVEL 5 AND 6  -> OBotz 
+Written by: Abhinav Bathala 
+Programming Language: Embedded C
+
+༶•┈┈⛧┈♛ Table of Contents ♛┈⛧┈┈•༶
+
+Functions:						  
+➢ IR Remote Values Function (Level 6)		  
+➢ Servo Motor Function (Level 6)				  
+➢ Stepper Motor Function (Level 6)				  
+
+Concepts:				  
+➢ Initialization Parameters (Level 5 & 6) | NOT DONE
+➢ Registers and Macros (Level 5 & 6)
+➢ Masking (Level 5) | NOT DONE
+➢ ADC Conversions (Level 5 & 6)	
+➢ Timers and PWM (Level 5 & Level 6)						  		  
+➢ ISR Interrupts (Level 6)	
+➢ External Interrupts (Level 6)	
+➢ Duty Cycle (Level 5 & 6)
+						  
+Extras:							  
+➢ IR Remote Values 					  
+➢ Joystick Values					  
+➢ Keypad Values								  
+➢ Thermistor Values and Formulas
+➢ SSD Binary Values
+➢ Binary and Hexademical Conversions
+➢ Bluetooth With HC-05	
+➢ Dot Matrix Values				  
+
+//--------------------------------------------------------------»»————- ＦＵＮＣＴＩＯＮＳ ————-««-----------------------------------------------------\\	
+
+								        
+1. IR Remote Reading Function/s:
+
+ISR(TIMER0_OVF_vect)          //ISR Register
+{
+  x++;                        //incrementing variable "x"
+  TCNT0 = 125;                //Changing TCNT0 Value to 125
+}
+ISR(INT2_vect)                //other ISR register
+{
+  timervalue = x;             //setting variable "x" to the same value as "timervalue"
+  x = 0;
+  bitposition++;              //incrementing variable "bitposition"
+  if((timervalue >= 100))     //checking if timervalue variable is greater or equal to 100
+  {
+    bitposition = -2;         //changing bitposition value to -2
+    keycode = 0;              //keycode value back to 0
+  }
+  if((bitposition >= 0) && (bitposition < 32))      //checking if bitposition is greater or equal to 0 AND bitposition is less than 32
+  {
+    if(timervalue > 3)                              //checking if timervalue is more than 3
+    {
+      keycode |=(long)1<<(31 - bitposition);        //keycode OR gate or equal to 
+    }
+  }
+  else if(bitposition >= 32)                        //if none of the above is true, if bitposition is greater than or equal to 32...
+  {
+    bitposition = 0;                                //bitposition is equal to 0
+    compare();                                      //calling compare function
+  }
+}
+
+Definition: This function reads the values that the IR Remote gives for each key pressed...
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+2. Servo Motor Function:
+
+void angle1(int a) 		//Just angle variable (Ignore) Add this if your using a motor
+{
+  count_angle1 = a + 46;
+}
+void angle2(int b)		//Just angle variable (Ignore) Add this if your using your 2nd motor
+{
+  count_angle2 = b + 46;
+}
+void angle3(int c)		//Just angle variable (Ignore) Add this if your using your 3rd motor
+{
+  count_angle3 = c + 46;
+}
+
+ISR(TIMER1_COMPA_vect)		//Actual Function (ISR Interrupt)
+{
+  count++;
+  if(count <= count_angle)				//Everything from this line and below is for 1 Motor
+  {
+    setbit(PORTB, bitn(5));
+  }
+  else if((count > count_angle1) && (count < 1818))
+  {
+    clearbit(PORTB, bitn(5));
+  }
+  else if(count >= 1818)
+  {
+    count = 0;				
+  }
+  if (count <= count_angle2)				//Everything from this line and below is for 2 Motors
+  {
+    setbit(PORTB, bitn(6));
+  }
+  else if((count > count_angle2) && (count < 1818))
+  {
+    clearbit(PORTB, bitn(6));
+  }
+    else if(count >= 1818)
+  {
+    count = 0;
+  }
+  if (count <= count_angle3)				//Everything from this line and below is for 3 Motors
+  {
+    setbit(PORTB, bitn(7));
+  }
+  else if((count > count_angle3) && (count < 1818))
+  {
+    clearbit(PORTB, bitn(7));
+  }
+  else if(count >= 1818)
+  {
+    count = 0;
+  }
+}
+
+Definition: This function helps us to control the movement of servo motors from 1-3...
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+3. Stepper Motor Function:
+
+void antistepper()		//Anticlockwise Rotation
+{
+  if (d == 1)			//"d" just variable name (Need a variable to increment for the program to work)
+  {	
+    PORTD = 0b11100000;
+  }
+  if (d == 2)			//"d" just variable name (Need a variable to increment for the program to work)
+  {
+    PORTD = 0b11010000;
+  }
+  if (d == 3)			//"d" just variable name (Need a variable to increment for the program to work)
+  {
+    PORTD = 0b10110000;
+  }
+  if (d == 4)			//"d" just variable name (Need a variable to increment for the program to work)
+  {
+    PORTD = 0b01110000;
+    d = 0;			//"d" just variable name (Need a variable to increment for the program to work)
+  }
+}
+void clkstepper()		//Clockwise Rotation
+{
+  if (c == 1)			//"c" just variable name (Need a variable to increment for the program to work)
+  {
+    PORTD = 0b01110000;
+  }
+  if (c == 2)			//"c" just variable name (Need a variable to increment for the program to work)
+  {
+    PORTD = 0b10110000;
+  }
+  if (c == 3)			//"c" just variable name (Need a variable to increment for the program to work)
+  {
+    PORTD = 0b11010000;
+  }
+  if (c == 4)			//"c" just variable name (Need a variable to increment for the program to work)
+  {	
+    PORTD = 0b11100000;
+    c = 0;			//"c" just variable name (Need a variable to increment for the program to work)
+  }
+}
+
+Definition: This function helps us to increment the values of the stepper motor making it move at a constant rate...
+
+								
+//--------------------------------------------------------------»»————- ＣＯＮＣＥＰＴＳ ————-««-----------------------------------------------------\\								
+
+1. Initialization Parameters | Not Done
+
+	
+DDRn = 0xYY; 		//'n' represents the port on the board and 'Y' represents a hexadecimal value
+ADMUX = 0x40;		
+ADCSRA = 0xC7;
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+2. Registers
+
+	Definition: Registers are locations inside memory to configure specific tasks which a programmer can use to read and write data. 
+
+	Level 5 Registers:
+
+		DDRx Registers:
+		
+			- DDRx Registers also known as Data Direction Register is used to set the direction of a particular port on an electronic board. 
+			- The options we can set the specific port is"INPUT" or "OUTPUT". 
+			- Input is reading values from a specific pin that is connected to an input device (taking in signals from outside)
+			- Output is giving out power to a specific pin that is connected to an output device (giving signals outside)
+			- The DDRx Registers is a 8-bit register and can be represented as such: DDRx7, DDRx6, DDRx5, DDRx4, DDRx3, DDRx2, DDRx1, DDRx0
+			- In this case, "x" represents the PORT letter (A, B, C, D)
+			- Example: DDRD = 0xFF (hexadecimal) or DDRD = 0b11111111 (binary); Your setting all the pins in PORTD as "output"
+
+		PORTx Registers: 
+
+			- PORTx Registers are used to set the pins of a PORT as logic HIGH (1) or LOW (0) state
+			- In other words, you can choose which pins you want to send power to on your program
+			- This Register can only be used when your port is set as OUTPUT from your DDRx Register
+			- The PORTx Register is again a 8-bit register just like DDRx Register which can be represented as such: PORTx7, PORTx6, PORTx5, PORTx4, PORTx3, PORTx2, PORTx1, PORTx0
+			- Example: PORTD = 0xFF (hexadecimal) or PORTD = 0b11111111 (binary); Your setting all the pins in PORTD as "high"
+
+		PINx Registers:
+
+			- PINx Registers are used to read the status or value of a PORT
+			- In other words, you can read the value that the port is taking in from an input device 
+			- This register can only be used when your port is set as INPUT from your DDRx Register 
+			- The PINx Register is a 8-bit register just like the DDRx and the PORTx Registers which can be represented as such: PINx7, PINx6, PINx5, PINx4, PINx3, PINx2, PINx1, PINx0
+			- Example: var = PINC (It will read the entire status of the pins PORTC, for example: 0b01010101)
+
+	Level 5 Macros:
+	
+		Bit Position Macro:
+
+			- Command: "#define bitn(p) (0x01 << (p))"
+			- 'p' helps us to set the postition of the bit we would like to set or reset
+			- In a program, we simply replace the 'p' with the bit number
+			- We can also write bitn(ADSC) to make it work on the ADSC bit of that specific register
+
+		Set Bit Macro:
+
+			- Initialization Command: "#define setbit(x, y) (x |= y)"
+			- This macro helps us to set a particular bit as "1" in any register
+			- Example: setbit(DDRD, 0x01); This sets bit 0 of DDRD as '1'
+			- Example: setbit(DDRD, bitn(0)); This sets bit 0 of DDRD as '1'
+			- x represents the name of the register	
+			- y represents the value or bit we want to set
+			- Performs the OR Masking Method
+
+		Clear Bit Macro:
+
+			- Initialization Command: "#define clearbit(x,y) (x &= ~y)"
+			- This macro helps us to clear the bits in any register (making a specific bit in any register as '0')
+			- Example: clearbit(DDRD, 0x01); This clears bit 0 of DDRD as '0'
+			- Example: clearbit(DDRD, bitn(0)); This clears bit 0 of DDRD as '0'
+			- x represents the register name 
+			- y represents the value or bit we want to clear/reset
+			- Performs the AND Masking Method
+
+		Check Bit Macro:
+
+			- Initialization Command: "#define checkbit(x,y) ((x) & (y))"
+			- This macro helps us to check the status of a particular bit in any register
+			- Example: if(checkbit(PIND, bitn(2))); Checks whether bit 2 in PIND is '1' or not
+			- x represents the register name
+			- y represents the bit we want to check
+			- Compares the specific bit position and uses bitwise AND operator 
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+3. Masking Concept (Level 5)
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+4. ADC (Analog to Digital Conversions) - Level 5 & 6
+
+	Definition: Due to microcontrollers/IC not able to understand analog signals, it is converted to a digital code before processing.
+	This is done by the ADC (Analog to Digital Converter) inside the microcontroller/IC.
+
+	Note: To use ADC, you have to first initialize the registers associated with it. There are 5 Registers for ADC and they are
+	- ADMUX (ADC Multiplexer Selection Register)
+	- ADCSRA (ADC Control and Status Register A)
+	- ADCL (ADC Data Register LOW)
+	- ADCH (ADC Data Register HIGH)
+	- ADCW (ADC Data Register HIGH & LOW)
+
+	ADMUX Register:
+
+		- It is a 8-bit register that helps us to set the reference voltage for ADC
+		- Allows to enable different ADC channels
+		- The entire PORT A (8 channels / pins) are dedicated to ADC
+		- The only bits used for ADC for now is 7(REFS1), 6(REFS0), 2(MUX2), 1(MUX1), 0(MUX0)
+			
+			- Bits 7 & 6 are Reference Selection Bits:
+				- These bits are used to set the reference voltage for ADC
+				- There are 4 combinations and they are: 
+					- AREF, Internal Vref turned off (REFS1 = 0, REFS0 = 0); 
+					- AVCC (REFS1 = 0, REFS0 = 1) 
+					- Reserved (REFS1 = 1, REFS0 = 0)
+					- Internal 2.56V Voltage Reference
+				- The second combination will be used in the programs and the reference voltage will be 5V
+
+			- Bits 2, 1, 0 are Analog Channel Selection Bits:
+				- These bits are used to select the analog channels or the pins
+				- There are 8 ADC Pins available therefore 8 possible combinations:
+					- Channel ADC0 with ADC pin as A0 (MUX2 = 0, MUX1 = 0, MUX0 = 0); ADMUX Value = 0x40
+					- Channel ADC1 with ADC pin as A1 (MUX2 = 0, MUX1 = 0, MUX0 = 1); ADMUX Value = 0x41 
+					- Channel ADC2 with ADC pin as A2 (MUX2 = 0, MUX1 = 1, MUX0 = 0); ADMUX Value = 0x42
+					- Channel ADC3 with ADC pin as A3 (MUX2 = 0, MUX1 = 1, MUX0 = 1); ADMUX Value = 0x43
+					- Channel ADC4 with ADC pin as A4 (MUX2 = 1, MUX1 = 0, MUX0 = 0); ADMUX Value = 0x44
+					- Channel ADC5 with ADC pin as A5 (MUX2 = 1, MUX1 = 0, MUX0 = 1); ADMUX Value = 0x45
+					- Channel ADC6 with ADC pin as A6 (MUX2 = 1, MUX1 = 1, MUX0 = 0); ADMUX Value = 0x46
+					- Channel ADC7 with ADC pin as A7 (MUX2 = 1, MUX1 = 1, MUX0 = 1); ADMUX Value = 0x47
+				- By default, all the bits in the ADMUX Register are set as '0'
+
+	ADCSRA Register:
+
+		- It is a 8-bit register 
+		- Start and stop the conversion of ADC, enable the interrupt, and enable certain ports on the analog port
+		- The 8 bits are: 7(ADEN), 6(ADSC), 5(ADATE), 4(ADIF), 3(ADIE), 2(ADPS2), 1(ADPS1), 0(ASPS0)
+			
+			- Bit 7; ADEN (ADC Enabling):
+				- When ADEN is set to 0 (ADEN = 0), the ADC is off which means analog conversions won't work
+				- When ADEN is set to 1 (ADEN = 1), the ADC is on allowing us to use analog conversions
+			- Bit 6; ADSC (ADC Start Conversion):
+				- Bit is set to '1' when in need to start the conversion
+				- After the conversion is complete, the bit is automatically resets to '0'
+			- Bit 2, 1, 0; ADPS2, ADPS1, ADPS0 (Prescaler Select Bits)
+				- These bits are used to set the clock frequency for ADC
+				- ADC can work if the frequency is 50 KHz - 200 KHz
+				- Since the microcontroller runs at 16 MHz using the external crystal oscillator, we need to cut down the frequency using the Prescaler dividing the frequency
+				- Options for the Prescalers are:
+					- Prescaler 0 with a frequency of 16 MHz (ADPS2 = 0, ADPS1 = 0, ADPS0 = 0)
+					- Prescaler 2 with a frequency of 8 MHz (ADPS2 = 0, ADPS1 = 0, ADPS0 = 1)
+					- Prescaler 4 with a frequency of 4 MHz (ADPS2 = 0, ADPS1 = 1, ADPS0 = 0)
+					- Prescaler 8 with a frequency of 2 MHz (ADPS2 = 0, ADPS1 = 1, ADPS0 = 1)
+					- Prescaler 16 with a frequency of 1 MHz (ADPS2 = 1, ADPS1 = 0, ADPS0 = 0)
+					- Prescaler 32 with a frequency of 500 KHz (ADPS2 = 1, ADPS1 = 0, ADPS0 = 1)
+					- Prescaler 64 with a frequency of 250 KHz (ADPS2 = 1, ADPS1 = 1, ADPS0 = 0)
+					- Prescaler 128 with a frequency of 125 KHz (ADPS2 = 1, ADPS1 = 1, ADPS0 = 1)
+				- The only prescaler that is usable is Prescaler 128 (125 KHz) as it is the only one with a frequency between 50 KHz and 200 KHz 
+		- By default, all the bits in ADCSRA Register are '0'
+		- Always have to enable ADC before using it by using this command: "ADCSRA = 0x87"
+
+	ADCL & ADCH Registers:
+
+		- Both are 8-bit registers and is used to store the results of the conversion 
+		- The ADC conversion in ATmega32 and ATmega324 is 10-bits therefore it cannot store all 10-bit in an 8-bit register
+		- To fix its issue, both ADCH and ADCL registers combine to make one 16-bit register in order to store the ADC results
+
+			- ADCH = 15(-), 14(-), 13(-), 12(-), 11(-), 10(-), 9(10th bit), 8(9th bit)
+		  	  ADCL = 7(8th bit), 6(7th bit), 5(6th bit), 4(5th bit), 3(4th bit), 2(3rd bit), 1(2nd bit), 0(1st bit)
+
+		- By default, the result is stored in the manner above
+		- The LSB of the result is stored in the ADCL register and the MSB is stored in the ADCH register
+		- Because this is just a complicated process and it is very hard to keep track on which parts of the result is stored in each register, it will be more easy to have one 16-bit register to store everything instead of two 8-bit registers
+		- That register is called "ADCW"
+
+	ADCW Registers:
+
+		- ADCW is a combination of both ADCH and ADCL registers
+		- ADCW will be used for the same purpose as ADCH and ADCL (Extracting the result/output values and storing it in a variable)
+		- Ex. "int data = ADCW;"		//Store the contents of ADCW (ADCH and ADCL) into a variable called 'data'
+
+
+	Initializing ADC:
+		
+		1. Initialize ADMUX Register; "REFS0 = 1"
+		2. Set the 5V Reference Voltage using channel ADC0; "ADMUX = 0x40" 
+		3. Enable ADC with a Prescaler of 128; "ADCSRA = 0x87"
+		4. Start the conversion by setting ADSC bit to '1' in the ADCSRA Register; "ADCSRA = 0xC7"
+		5. Wait until the conversion is done i.e. ADSC = 0; "while(checkbit(ADCSRA, bitn(ADSC)))"
+		6. Store the results from the ADC conversion into a variable; "int data = ADCW" 	
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+5. Timers and PWM - Level 5 & 6
+
+- Definition: Timers are used to track the time during intervals between events. Timers can also be considered as "counters"
+	
+	- Timers and PWM (Level 5)
+		
+		- In ATmega32, there are 3 timers/counters
+			- Two 8-bit timers and one 16-bit timers/counters
+		- "TC" is the prefix for the command and is the short form for (Timer/Counter)
+		- TC0 and TC2 are the 8-bit timers and TC1 is the 16-bit timer
+		- 8-bit timers can count up until 2^8 = 256 - 1 = 255
+		- 16-bit timers can count up until 2^16 = 65,536 - 1 = 65,535
+		- There are 4 pins for PWM; PB3, PD4, PD5, PD7
+		- There are 3 registers needed for timers:
+			- Timer/Counter Control Register
+				- Timer/Counter 0 | TC0 = TCCR0
+				- Timer/Counter 2 | TC2 = TCCR2
+				- Timer/Counter 1 | TC1 = TCCR1A & TCCR1B
+			- Timer/Counter Register
+				- Timer/Counter 0 | TCR0 = TCNT0
+				- Timer/Counter 2 | TCR2 = TCNT2
+				- Timer/Counter 1 | TCR1 = TCNT1
+			- Output Compare Register
+				- Timer/Counter 0 | OCR0 = OCR0
+				- Timer/Counter 2 | OCR2 = OCR2
+				- Timer/Counter 1 | OCR1 = 0CR1A & OCR1B
+
+		- Timer/Counter Control Register A (TCCR0A & TCCR2A) for 8-bit timers:
+			- TCCRn Register is used to set the mode for 8-bit timers in which we want to operate it
+			- 'n' represents the timer which you want to use 
+			- The 8-bits for TCCR0 and TCCR2 are 7(FOCn), 6(WGMn0), 5(COMn1), 4(COMn0), 3(WGMn1), 2(CSn2), 1(CSn1), 0(CSn0); the ones that will be used are bits 6-0
+				- Bits 6 and 3; WGMn0 & WGMn1 (Waveform Generator Mode)
+					- These bits are used to select the mode of operation for the timer
+					- The following modes are available:
+						- Normal (Mode = 0, WGMn1 = 0, WGMn0 = 0)
+						- PWM, Phase Correct (Mode = 1, WGMn1 = 0, WGMn0 = 1)
+						- CTC (Mode = 2, WGMn1 = 1, WGMn0 = 0)
+						- Fast PWM (Mode = 3, WGMn1 = 1, WGMn0 = 1)
+					- The mode that will be used the most for PWM operations is option 4, "Fast PWM" mode
+				- Bits 5 and 4; COMn1 and COMn0 (Compare Match Output Mode)
+					- These bits are used to help general the PWM signals on the OCn pins
+					- The following modes are available:
+						- Normal Port Operation; OCn Disconnected (COMn1 = 0, COMn0 = 0)
+						- Reserved (COMn1 = 0, COMn0 = 1)
+						- Clear OCn On Compare Match; Non-Inverting Mode (COMn1 = 1, COMn0 = 0)
+						- Set OCn on compare match; Inverting Mode (COMn1 = 1, COMn0 = 1)
+					- The mode that will be used the most for PWM operations is option 3, "Non-Inverting Mode"
+				- Bits 2, 1, 0; CSn2, CSn1, CSn0 (Clock Select)
+					- These bits are used to select the clock source for the timer to operate
+					- The following modes are available:
+						- No Clock Source; Timer/Counter Stopped  (CSn2 = 0, CSn1 = 0, CSn0 = 0) with a frequency of -	
+						- No Prescaler or Prescaler 1 (CSn2 = 0, CSn1 = 0, CSn0 = 1) with a frequency of 16 MHz
+						- Prescaler 8 (CSn2 = 0, CSn1 = 1, CSn0 = 0) with a frequency of 2 MHz
+						- Prescaler 64 (CSn2 = 0, CSn1 = 1, CSn0 = 1) with a frequency of 250 KHz
+						- Prescaler 256 (CSn2 = 1, CSn1 = 0, CSn0 = 0) with a frequency of 62.5 KHz				
+						- Prescaler 1028 (CSn2 = 1, CSn1 = 0, CSn0 = 1)	with a frequency of 15.625 KHz
+						- External Clock Source on Tn pin; Clock on Falling Edge (CSn2 = 1, CSn1 = 1, CSn0 = 0) with a frequency of -
+						- External Clock Source on Tn pin; Clock on Rising Edge (CSn2 = 1, CSn1 = 1, CSn0 = 1) with a frequency of -
+			- Initialization:
+				1. Select the TCCRn Register mode as 'Fast PWM Mode', 'non-inverting' and a prescaler of 64: "TCCRn = 0b01101011;" of "TCCRn = 0x6D;"
+				2. Set the PWM Pins as "output": Ex. "DDRB = 0b00001000;"
+				3. If we want to set some PWM value to OC0, we need to use the OCR0 Register; Ex: "OCR0 = 150;"
+
+		- Timer/Counter Control Register A (TCCR1A) for 16-bit timer:
+			- TCCR1A Register is used to set the mode for 16-bit timers in which we want to operate it
+			- The 8-bits for TCCR1A are 7(COM1A1), 6(COM1A0), 5(COM1B1), 4(COM1B0), 3(FOC1A), 2(FOC1B), 1(WGM11), 0(WGM10) and the ones that will be used are bits 7-4, 1 & 0
+				- Bits 7 & 6; COM1A1 & COM1A0 (Compare Output Mode for channel A):
+					- Helps us to generate PWM signals on OC1A (PD5 Pin)
+					- The following modes that are available are:
+						- Normal Port operation; OC1A Disconnected (COM1A1 = 0, COM1A0 = 0)
+						- Reserved (COM1A1 = 0, COM1A0 = 1)			
+						- Clear OC1A on compare match; non - inverting mode (COM1A1 = 1, COM1A0 = 0)
+						- Set OC1A on compare match; inverting mode (COM1A1 = 1, COM1A0 = 1)
+					- The mode that will be used is the "non - inverting" mode with fast PWM 
+
+				- Bits 5 & 4; COM1B1 & COM1B0 (Compare Output Mode for channel B):
+					- These bits help us to generate PWM signals on OC1B (PD4 Pin)
+					- The following modes that are available are:
+						- Normal Port operation; OC1B Disconnected (COM1B1 = 0, COM1B0 = 0)
+						- Reserved (COM1B1 = 0, COM1B0 = 1)
+						- Clear OC1B on compare match; non - inverting mode (COM1B1 = 1, COM1B0 = 0)
+						- Set OC1B on compare match; inverting mode (COM1B1 = 1, COM1B0 = 1)
+					- The mode that will be used is the "non - inverting" mode with fast PWM
+
+				- Bits 1 & 0; WGM11 & WGM10 (Waveform Generation Mode):
+					- These bits are combined with WGM13 and WGM12 in the TCCR1B Register to select the mode of operation for TC1
+					- The following modes that are available are:
+						- Normal (Mode = 0, WGM12 = 0, WGM11 = 0, WGM10 = 0)
+						- PWM, Phase Correct 8-bit (Mode = 1, WGM12 = 0, WGM11 = 0, WGM10 = 1)
+						- PWM, Phase Correct 9-bit (Mode = 2, WGM12 = 0, WGM11 = 1, WGM10 = 0)
+						- PWM Phase Correct 10-bit (Mode = 3, WGM12 = 0, WGM11 = 1, WGM10 = 1)	
+						- CTC (Mode = 4, WGM12 = 1, WGM11 = 0, WGM10 = 1)
+						- Fast PWM 8-bit (Mode = 5, WGM12 = 1, WGM11 = 0, WGM10 = 1)
+						- Fast PWM 9-bit (Mode = 6, WGM12 = 1, WGM11 = 1, WGM10 = 0)
+						- Fast PWM 10-bit (Mode = 7, WGM12 = 1, WGM11 = 1, WGM10 = 1)
+					- The mode that will be used is the "8-bit mode" with fast PWM
+
+		- Timer/Counter Control Register B (TCCRnB) for 8-bit and 16-bit timers:			
+
+			- TCCRnB Register is considered as an extention to TCCRnA
+			- It holds the bits for mode of operation for the timer and also the bits to set the prescaler for the timer
+			- The 8-bits for TCCR1B are 7(ICNC1), 6(ICES1), 5(-), 4(WGM13), 3(WGM12), 2(CS12), 1(CS11), 0(CS10) and the ones that will be used are bits 3-0
+				- Bits 4 & 3; WGM13 & WGM12 (Waveform Generation Mode):
+					- These bits are used with WGM11 and WGM10 in the TCCR1A Register to select the mode of operation
+					- The modes are the same as listed in TCCR1A Register
+					- Again, Mode 5 will be used (8-bit, Fast PWM Mode)
+				- Bits 2, 1, & 0; CS12, CS11, CS10 (Clock Select
+					- These clock select bits are used to set the clock source for timer by selecting a prescaler
+					- The timer will not start if the clock select bits are at '0'
+					- You will have to select a prescaler to start the timer as followed below:
+						- No Clock Source; - Frequency (CS12 = 0, CS11 = 0, CS10 = 0)
+						- No Prescaler or Prescaler 1; 16 MHz (CS12 = 0, CS11 = 0, CS10 = 1)
+						- Prescaler 8; 2 MHz (CS12 = 0, CS11 = 1, CS10 = 0)
+						- Prescaler 64; 250 KHz (CS12 = 0, CS11 = 1, CS10 = 1)
+						- Prescaler 256; 62.5 KHz (CS12 = 1, CS11 = 0, CS10 = 0)
+						- Prescaler 1028l 15.625 KHz (CS12 = 1, CS11 = 0, CS10 = 1)
+						- External Clock Source on T1 Pin (Clock on falling edge); - Frequency (CS12 = 1, CS11 = 1, CS10 = 0)
+						- External Clock Source on T1 Pin (Clock on rising edge); - Frequency (CS12 = 1, CS11 = 1, CS10 = 1)
+
+		- Initialization of TCCRnA and TCCRnB Registers:
+			1. Set the TCCR1A register in "Fast PWM Mode" and "non-inverting mode"; Ex. TCCR1A = 0xA1; (Using PD5)
+			2. Set the TCCR1B register in "Fast PWM Mode" with a prescaler; Ex. TCCR1B = 0x6B (Using prescaler 256)	
+			3. Set the PWM pin as output pin; Ex. DDRD = 0x20 (Using PD5 as it is set as 'output')
+			4. Set the OCR value (OCR1A Register) from anywhere between 0 and 255; Ex. OCR1A = 127;
+		
+		- Timer/Counter Register (TCNTn) (n = 2 || n = 0)
+			- This register stores an 8-bit values (anywhere from 0-255) which increases/decreases
+			- Data can be read and written
+			- This register won't function until you activate it
+
+		- Output Compare Register (OCRn)
+			- This register stores an 8-bit values (anywhere from 0-255) which is continuosly compared with the counter 'TCNTn'
+			- The PWM value is written in this register
+			- A waveform is generated on the OCn pin once the values of both the registers matched
+
+		- Timer/Counter Register (TCNTn) (n = 1)
+			- A 16-bit register that stores the count value in 2 registers of 8-bit each
+			- The LSB count value is stored in TCNT1L and MSB is stored in TCNT1H
+			- The count value increments or decrements automatically depending on the objective of the program
+			- Layout of the two 8-bit register (total 16-bit):
+				TCNT1H = 16th bit, 15th bit, 14th bit, 13th bit, 12th bit, 11th bit, 10th bit, 9th bit
+				TCNT1L = 8th bit, 7th bit, 6th bit, 5th bit, 4th bit, 3rd bit, 2nd bit, 1st bit
+
+		- Output Compare Register 1A (OCR1A)
+			- This register stored the PWM value of OC1A (Pin PD5) 
+			- Value of this register is continously compared with TCNT1 register to give an output of PWM values
+			- 16 bit register as it's data is stored in two 8-bit registers
+			- OCR1AH stores the MSB of the data and the OCR1AL stores the LSB of the data
+			- Layout of the two 8-bit register (total 16-bit):
+				OCR1AH = 16th bit, 15th bit, 14th bit, 13th bit, 12th bit, 11th bit, 10th bit, 9th bit
+				OCR1AL = 8th bit, 7th bit, 6th bit, 5th bit, 4th bit, 3rd bit, 2nd bit, 1st bit
+		
+		- Output Compare Register 1B (OCR1B)
+			- This register stored the PWM value of OC1B (Pin PD4) 
+			- Value of this register is continously compared with TCNT1 register to give an output of PWM values
+			- 16 bit register as it's data is stored in two 8-bit registers
+			- OCR1AH stores the MSB of the data and the OCR1AL stores the LSB of the data
+			- Layout of the two 8-bit register (total 16-bit):
+				OCR1BH = 16th bit, 15th bit, 14th bit, 13th bit, 12th bit, 11th bit, 10th bit, 9th bit
+				OCR1BL = 8th bit, 7th bit, 6th bit, 5th bit, 4th bit, 3rd bit, 2nd bit, 1st bit
+
+	- Timers and PWM (Level 6)
+		- Just like in the ATmega34, the ATmega324 also have 3 timers/counters; Two 8-bit timers (Timer 0 & 2) and one 16-bit timer (Timer 1)
+		- 'TC' is the prefix for Timer/Counter
+		- 8-bit timers can count up to 256 while 16-bit timers can count up to 65,535
+		- There are 4 registers that are used to control timers and they are:
+			- Timer/Counter Control Register
+				- Timer/Counter 0 | TCCR0A & TCCR0B
+				- Timer/Counter 1 | TCCR1A & TCCR1B
+				- Timer/Counter 2 | TCCR2A & TCCR2B
+			- Timer/Counter Register
+				- Timer/Counter 0 | TCNT0
+				- Timer/Counter 1 | TCNT1
+				- Timer/Counter 2 | TCNT2
+			- Output Compare Register
+				- Timer/Counter 0 | OCR0A & OCR0B
+				- Timer/Counter 1 | OCR1A & OCR1B
+				- Timer/Counter 2 | OCR2A & OCR2B
+			- Timer Interrupt Register
+				- Timer/Counter 0 | TIMSK0
+				- Timer/Counter 1 | TIMSK1
+				- Timer/Counter 2 | TIMSK2
+	
+		- The PWM Pins that are associated with the timer registers are:
+			- PB3 | (Name = OC0A, Timer = TC0, PWM Register = 0CR0A)
+			- PB4 | (Name = OC0B, Timer = TC0, PWM Register = 0CR0B)
+			- PD4 | (Name = OC1B, Timer = TC1, PWM Register = OCR1BH & OCR1BL)
+			- PD5 | (Name = OC1A, Timer = TC1, PWM Register = OCR1AH & OCR1AL)
+			- PD6 | (Name = OC2B, Timer = TC2, PWM Register = OCR2B)
+			- PD7 | (Name = OC2A, Timer = TC2, PWM Register = OCR2A)
+
+		- Timer/Counter Control Register A (TCCRnA) (n = 0 || n = 1 || n = 2)
+			- TCCRnA is used to set the mode in which we want to operate the timer
+			- Also used to set the prescaler
+			- The 8-bits for TCCRnA are 7(COMnA1), 6(COMnA0), 5(COMnB1), 4(COMnB0), 3(-), 2(-), 1(WGMn01), 0(WGMn02)
+				- Bits 7 & 6; COMnA1 & COMnA0 (Compare Output Mode for Channel A):
+					- Used to generate PWM signals on OC1A (Pin PD5)
+					- The available modes are:
+						- Normal Port Operation; OCnA Disconnnected (COMnA1 = 0, COMnA0 = 0)
+						- Reserved (COMnA1 = 0, COMnA0 = 1)
+						- Clear OCnA on compare match; non-inverting mode (COMnA1 = 1, COMnA0 = 0)
+						- Set OCnA on compare match; inverting mode (COMnA1 = 1, COMnA0 = 1)
+				- Bits 5 & 4; COMnB1 & COMnB0 (Compare Output Mode for Channel B):
+					- Used to generate PWM sigansl on OC1B (Pin PD4)
+					- The available modes are:
+						- Normal Port Operation; OCnB Disconnnected (COMnB1 = 0, COMnB0 = 0)
+						- Reserved (COMnB1 = 0, COMnB0 = 1)
+						- Clear OCnA on compare match; non-inverting mode (COMnB1 = 1, COMnB0 = 0)
+						- Set OCnA on compare match; inverting mode (COMnB1 = 1, COMnB0 = 1)
+				- Bits 1 & 0; WGMn1 & WGMn0 (Waveform Generation Mode):
+					- Used to select the mode of operation for the timer by combining WGMn3 and WGMn2 bits in the TCCR1B register
+					- There are 8 modes/combination that are available and they are:
+						- Normal (Mode = 0, WGMn2 = 0, WGMn1 = 0, WGMn0 = 0)
+						- PWM; Phase Correct 8-bit (Mode = 1, WGMn2 = 0, WGMn1 = 0, WGMn0 = 1)
+						- PWM; Phase Correct 9-bit (Mode = 2, WGMn2 = 0, WGMn1 = 1, WGMn0 = 0)
+						- PWM; Phase Correct 10-bit (Mode = 3, WGMn2 = 0, WGMn1 = 1, WGMn0 = 1)
+						- CTC (Mode = 4, WGMn2 = 1, WGMn1 = 0, WGMn0 = 0)
+						- Fast PWM 8-bit (Mode = 5, WGMn2 = 1, WGMn1 = 0, WGMn0 = 1)
+						- Fast PWM 9-bit (Mode = 6, WGMn2 = 1, WGMn1 = 1, WGMn0 = 0)
+						- Fast PWM 10-bit (Mode = 7, WGMn2 = 1, WGMn1 = 1, WGMn0 = 1)
+					- Mode 5 will be used for PWM
+
+		- Timer/Counter Control Register B (TCCRnB) (n = 0 || n = 1 || n = 2)
+			- TCCRnB is considered as an extension to TCCRnA as it holds the bits for mode of operation for the timer
+			- Bits also sets the prescaler for the timer
+			- There are 8 bits and they are 7(-), 6(-), 5(-), 4(-), 3(WGMn2), 2(CSn2), 1(CSn1), 0(CSn); the ones that will be used are the last 4 bits
+				- Bit 3; WGMn2 (Waveform Generation Mode)
+					- This bit is used with WGMn1 and WGMn0 in the TCCRnA register as it selects the mode of operation
+						- The modes are listed in/the same as the TCCRnA Register 
+				- Bits 2, 1, and 0; CSn2, CSn1, and CSn0 (Clock Select)
+					- These bits are used to set the clock source for timer by selecting a prescaler 
+					- The prescaler will be decided by the specifications of the board (ex. ATmega324 is being operated at a frequency of 16 MHz with the help of the crystal oscillator) and the requirements
+					- The combinations that are available are:
+						- No Clock Source; Timer/Counter Stopped  (CSn2 = 0, CSn1 = 0, CSn0 = 0) with a frequency of - and the time for 1 tick is -
+						- No Prescaler or Prescaler 1 (CSn2 = 0, CSn1 = 0, CSn0 = 1) with a frequency of 16 MHz and the time for 1 tick is 0.0000625 ms
+						- Prescaler 8 (CSn2 = 0, CSn1 = 1, CSn0 = 0) with a frequency of 2 MHz and the time for 1 tick is 0.0005 ms
+						- Prescaler 64 (CSn2 = 0, CSn1 = 1, CSn0 = 1) with a frequency of 250 KHz and the time for 1 tick is 0.004 ms
+						- Prescaler 256 (CSn2 = 1, CSn1 = 0, CSn0 = 0) with a frequency of 62.5 KHz and the time for 1 tick is 0.016 ms		
+						- Prescaler 1028 (CSn2 = 1, CSn1 = 0, CSn0 = 1)	with a frequency of 15.625 KHz and the time for 1 tick is 0.064 ms
+						- External Clock Source on T1 pin; Clock on Falling Edge (CSn2 = 1, CSn1 = 1, CSn0 = 0) with a frequency of - and the time for 1 tick is -
+						- External Clock Source on T1 pin; Clock on Rising Edge (CSn2 = 1, CSn1 = 1, CSn0 = 1) with a frequency of - and the time for 1 tick is -
+						
+		- Timer/Counter Register (TCNTn) (n = 0 || n = 2)
+			- 8-bit regsiter for TC0 and TC2 
+			- Stores the value of the counter and increases/decreases automatically
+			- Able to read from it and write data to it 
+			- Timer 0 and 2 can go up until 255 while timer 1 can go up to 65,535
+			
+		- Output Compare Register A (OCRnA)
+			- This register stores the PWM value for the OCnA pin 
+			- The value in the register is continously being compared with the TCNTn register to generate PWM values and outputs
+			- 8-bit is for TC0 & TC2 while 16-bit is for TC1
+			- OCR1n Diagram is: 8th bit(7), 7th bit(6), 6th bit(5), 5th bit(4), 4th bit(3), 3rd bit(2), 2nd bit(1), 1st bit(0)
+			
+		- Output Compare Register B (OCRnB) (n = 0 || n = 1 || n = 2)
+			- This register stores the PWM value for the OCnB pin
+			- The value in the register is continously being compared with the TCNTn register to generate PWM values and outputs
+			- 8-bit is for TC0 & TC2 while 16-bit is for TC1
+			- OCR1n Diagram is: 8th bit(7), 7th bit(6), 6th bit(5), 5th bit(4), 4th bit(3), 3rd bit(2), 2nd bit(1), 1st bit(0)
+
+		- Timer Interrupt Mask Register (TIMSKn)
+			- Used to enable the interrupt once the timer count reaches its maximum value or a pre-defined value
+			- When using Timer/Counter 1 (TC1), the register TIMSK1 will be used, TIMSKn = 8th bit(7), 7th bit(6), 6th bit(5), 5th bit(4), 4th bit(3), OCIEB(2), OCIEA(1), TOIE(0); Bits 2, 1 and 0 will be used
+				- Bit 2; OCIEB (Output Compare B Match Interrupt Enable)
+					- When this bit is set to 1 (HIGH) and the global interrupts are enabled from "SREG = 0x80", an interrupt service routine will be performed (bit is set to 1 when TCNTn = OCRnA)
+					- ISR to handle this interrupt is: 'ISR(TIMERn_COMPB_vect)'
+				- Bit 1; OCIEA (Output Compare A Match Interrupt Enable)
+					- When this bit is set to 1 (HIGH) and the global interrupts are enabled from "SREG = 0x80", an interrupt service routine will be performed (bit is set to 1 when TCNTn = OCRnA)
+					- ISR to handle this interrupt is: 'ISR(TIMERn_COMPA_vect)'
+				- Bit 0; TOIE (Timer Overflow Interrupt Enable)
+					- When this bit is set to 1 (HIGH) and the global interrupts are enabled from "SREG = 0x80", an interrupt service routine will be performed (bit is set to 1 as soon as the timer overflows)
+					- Ex. When an 8-bit timer counts until 255 and resets to 0, then the interrupt is generated
+					- ISR to handle this interrupt is: 'ISR(TIMERn_0VF_vect)'
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+6. ISR (Interrupt Service Routine) 
+
+Definition: 
+- Programs are reading inputs and giving outputs for each line. 
+- If a specific output is in a certain area of the program and lets say that you trigger that output only after the microcontroller has read/checked the condition of that line, then it will skip the output and return to it the next time it comes around
+- Although the microcontroller can go through the program pretty quickly, it can miss certain conditions
+- To avoid this, interrupts are used where if a condition occurs, the microcontroller will
+	- Stop where it is at 
+	- Goes to the part in the program where that interrupt was called
+	- Excecutes the task
+	- Goes back to where it was originally and continues from there
+- There are two types of interrupts; Hardware/External Interrupts & Software/Internal Interrupts
+	- Hardware Interrupts are generated by external devices that are connected to the microcontroller
+		- Ex. A external tact-switch can generate an interrupt once it is pressed and is followed by a condition
+	- Software Interrupts are generated internally by setting up various registers or few overflows
+		- Once an interrupt is generated, the microcontroller will excecute certain, specific tasks
+			- This is done in an 'Interrupt Service Routine' also known as 'ISR'
+
+Internal Interrupts:
+- To enable global interrupts, you have to initialize the Status Register ("SREG = 0x80")
+
+1. ISR (INT0_vect) - External Interrupt Request 0
+2. ISR (INT1_vect) - External Interrupt Request 1
+3. ISR (INT2_vect) - External Interrupt Request 2
+4  ISR (TIMER0_COMPA_vect) - Timer/Counter0 Compare A
+5. ISR (TIMER0_COMPB_vect) - Timer/Counter0 Compare B
+6. ISR (TIMER0_OVF_vect) - Timer/Counter0 Overflow
+7. ISR (TIMER1_COMPA_vect) - Timer/Counter1 Compare A
+8. ISR (TIMER1_COMPB_vect)- Timer/Counter1 Compare B
+9. ISR (TIMER1_OVF_vect) - Timer/Counter1 Overflow
+10. ISR (TIMER2_COMPA_vect) - Timer/Counter2 Compare A
+11. ISR (TIMER2_COMPB_vect) - Timer/Counter2 Compare B
+12. ISR (TIMER2_OVF_vect) - Timer/Counter2 Overflow
+13. ISR (USART1_RX_vect) - USART1, Rx Complete
+
+External Interrupts:
+- On the ATmega324, there are 3 pins available for external interrupts and they are PB2 (INT0), PD2 (INT1), and PD3 (INT2) respectively. 
+- To use external interrupts, you will have to enable a few registers and they are EICRA, EIMSK, and SREG registers
+
+	- External Interrupt Control Register A (EICRA):
+			- This register is used to control the interrupt sense control bits for a particular bit
+			- An 8-bit register: 7(-), 6(-), 5(ISC21), 4(ISC20), 3(ISC11), 2(ISC10), 1(ISC01), 0(ISC00)
+				- The 'ISC' stands for "Interrupt Sense Control"
+				- It defines at what instance/condition we want an interrupt to be generated/created
+				- ISC00 & ISC01 | INT0 
+				- ISC10 & ISC11 | INT1
+				- ISC20 & ISC21 | INT2
+			- Contains four different modes:
+				- Low level of INTn generating an interrupt request (ISCn1 = 0, ISCn0 = 0)
+				- Any logical change on INTn generating an interrupt request (ISCn1 = 0, ISCn0 = 1)
+				- Falling edge of INTn generating an interrupt request (ISCn1 = 1, ISCn0 = 0)
+				- Rising edge of INTn generating an interrupt request (ISCn1 = 1, ISCn0 = 1)
+			- The third mode (falling edge) will be used most frequently
+			- Interrupt will be generated if only the signal moves from a high state to a low state
+
+	- External Interrupt Mask Register (EIMSK)
+			- This register is used to define which interrupt pin is used in the program to generate the interrupt request
+			- An 8-bit register: 7(-), 6(-), 5(-), 4(-), 3(-), 2(INT2), 1(INT1), 0(INT0)
+				- Bit 2; INT2 (External Interrupt Request 2 Enabled)
+					- The external interrupt is enable and a request will be generated when the INT2 bit is set along the first bit in SREG
+					- ISC21 & ISC20 bits in EICRA helps to define at what time the interrupt would be generated
+					- Corresponding ISR is "ISR(INT2_vect)"
+				- Bit 1; INT1 (External Interrupt Request 1 Enabled)
+					- The external interrupt is enable and a request will be generated when the INT1 bit is set along the first bit in SREG
+					- ISC11 & ISC10 bits in EICRA helps to define at what time the interrupt would be generated
+					- Corresponding ISR is "ISR(INT1_vect)"
+				- Bit 0; INT0 (External Interrupt Request 0 Enabled)
+					- The external interrupt is enable and a request will be generated when the INT0 bit is set along the first bit in SREG
+					- ISC01 & ISC00 bits in EICRA helps to define at what time the interrupt would be generated
+					- Corresponding ISR is "ISR(INT0_vect)"
+
+
+//--------------------------------------------------------------»»————- ＥＸＴＲＡＳ ————-««--------------------------------------------------------\\
+
+1. IR Remote Hexadecimal Key Values:
+
+Power Button: 1FE48B7
+Mode Button: 1FE58A7
+Silent Button: 1FE7887
+Play Button: 1FE807F
+Rewind Button: 1FE40BF
+Forward Button: 1FEC03F
+EQ Button: 1FE20DF
+Volume Decrease: 1FEA05F
+Volume Increase: 1FE609F
+Number 0: 1FEE01F
+RPT Button: 1FE10EF
+U/SD Button: 1FE906F
+Number 1: 1FE50AF
+Number 2: 1FED827
+Number 3: 1FEF807
+Number 4: 1FE30CF
+Number 5: 1FEB04F
+Number 6: 1FE708F
+Number 7: 1FE00FF
+Number 8: 1FEF00F
+Number 9: 1FE9867
+
+Note: The values differ from person's IR Remote. DO NOT FOLLOW THESE IR REMOTE VALUES OR THE BOOKS VALUES AS IT IS DIFFERENT FOR EVERYONE.
+To check your IR remote values, find out in Experiment 12 in the book...
+					
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+																
+2. Joystick Values
+Left: (x,y) -> (1023, 520)
+Right (x,y) -> (0, 600)
+Up:   (x,y) -> (500, 1023)
+Down: (x,y) -> (500, 0)
+
+Note: Again, the values differ from person to person's Joystick. Do not use this values or the values in the book as it won't work for most people...
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+3. Keypad Values:
+1 = 518
+2 = 689
+3 = 766
+A = 1015
+4 = 489
+5 = 637
+6 = 703
+B = 907
+7 = 473
+8 = 611
+9 = 671
+C = 855
+* = 461
+0 = 591
+# = 646
+D = 816
+
+Note: Again, the values differ from person to person's keypad. Do not blindly copy the values as they will be inaccurate. 
+Overtime, the values may change so just in case, check the values again to make sure they satisfy each if-statement...
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+4. Thermistor:
+
+//Float Values
+float c1 = 0.001125307752122;
+float c2 = 0.000234711863267;
+float c3 = 0.000000085663516;
+
+//Thermistor Formulas
+R2 = (100000/(1023 - ADCW)) * ADCW;
+logR2 = log(R2);
+T = (1.0 /  (c1 + c2*logR2 + c3*logR2*logR2*logR2));
+Tc = T - 273.15;
+
+Note: There are the variable constants and formulas used to initialize the thermistor and displaying the exact temperature on the serial monitor.
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+5. SSD Binary Values
+
+"int number[] = {0b11110110, 0b01100000, 0b11010101, 0b11110001, 0b01100011, 0b10110011, 0b10110111, 0b11100000, 0b11110111, 0b11110011};"
+
+These values represent the binary values 
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+6. Binary and Hexadecimal Conversions:
+
+
+- Binary System: Base 2 (0 & 1)								  //Numbers that binary has
+		        (1   2)								  //1-2 decimal places
+
+- Hexadecimal System: Base 16 (0, 1, 2, 3, 4, 5, 6, 7, 8,  9,  A,  B,  C,  D,  E,  F)	  //Numbers & Characters that hexadecimal has
+			      (1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16) 	  //1-16 decimal places
+
+
+Hexadecimal and Binary Conversion Chart:
+	
+			
+	   Hexadecimal	┋    Binary
+	+---------------┋---------------+
+		0	┋     0000
+		1	┋     0001
+		2	┋     0010
+		3	┋     0011
+		4	┋     0100
+		5	┋     0101
+		6	┋     0110
+		7	┋     0111
+		8	┋     1000
+		9	┋     1001
+	        A	┋     1010
+		B	┋     1011
+		C	┋     1100
+		D	┋     1101
+		E	┋     1110
+		F	┋     1111
+
+
+- Most of the binary used in Embedded C is in 8-bit meaning there are '8' digits for binary
+	- Ex. 'DDRC = 0b00010010;' 	//Total of 8-digits (1 each per digit eight times)
+	- Ex. 'DDRC = 0x12;'		//Total of 8-digits (4 each per digit two times
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+	
+7. Bluetooth With HC-05:
+
+	- Bluetooth:
+		- Works at 2.4 GHz and is used for wireless communication
+		- Works up to a distance of 10 meters at most
+		- Used for wireless communications between two devices
+		- Devices must be connected to its respective bluetooth module which is a process known as 'pairing'
+	- HC-05:
+		- Has 2 modes of operation; Data Mode and AT Command Mode
+			- Data Mode:
+				- The mode in which the module communicates with the paired module by transmitting the data serially
+				- Known if the modules are connected by the behavior of the signal LEDs
+				- State is shown from the following actions:
+					- LED repeatedly blinking waiting for the connection of Data Mode
+					- LED blinks twice in 1 second indicating that the module connection is successful in Data Mode
+			- AT Command Mode:
+				- Stands for Attention Command Mode
+				- Used to check and change the default settings of HC-05 Module
+				- The following can be changed from 'default mode'; Name, Password, Role/Purpose of Module, etc
+				- State is shown from the LED which blinks once in 2 seconds indicating that the module connection is successful in AT Command Mode
+
+			- Default Settings:
+				- Default Bluetooth Name = HC-05
+				- Default Bluetooth Password = '1234' or '0000'
+				- Default Bluetooth Communication = Data Mode
+				- Default Mode Baud Rate = 9600 bps
+				- Command Mode Baud Rate = 38400 bps
+			
+	- HC-05 With USART:
+		- There are 2 ways ways for devices to connect with each other; Serial Communication and Parallel Communication	
+			- Serial Communicaton handles and transfers one bit at a time
+			- Parallel Communication handles and transfers multiple bits at a time
+			- Example. 
+				- Parallel Communication transfers all the 8-bits at the same time using 8 data pins
+				- Serial Communication transfers one bit each through 1 data pin eight seperate times
+		- Microcontrollers uses Serial Communication to communicate with other devices through dedicated pins
+		- Atmel microcontrollers have a special hardware for Serial Communication called 'USART' or otherwise known as 'Universal Synchronous Asynchronous Reciever Transmitter'
+		- 'TX' and 'RX' pins on a Atmel Microcontroller are used for USART
+			- 'TX' is used for transmiting data from a microcontroller to the device 
+			- 'RX' is used for recieving data from the device to a microcontroller
+		- USART have 5 registers associated with it
+			- UDR (USART Data Register)
+			- UCSRA (USART Control & Status Register A)
+			- UCSRB (USART Control & Status Register B)
+			- UCSRC (USART Control & Status Register C)
+			- UBRR (USART Baud Rate Register)
+
+
+		- UDR; USART Data Register
+			- An 8-bit register which contains the data to be transmitted
+			- The data which is wrote will be stores in this register 
+			- The data will then be termed as Transmit Data Buffer Register (TXB) and when read, it is termed as Receive Data Buffer Register (RXB)
+
+		- UCSRA; USART Control & Status Register A
+			- This register is used to control and read the status from Register A by USART 
+			- The only bit that is used is bit 7 (RXC)
+				- Bit 7; RXC (USART Receive Complete)
+					- This bit is set to '1' when there is unread data in receive buffer (RXB), otherwise when there isn't any data in RXB, then the bit is set to '0'
+		- UCSRB; USART Control & Status Register B
+			- This register is used to control and read the status from Register B by USART
+			- The bits in this register are: Bit 7(RXCIE), Bit 6(TXCIE), Bit 5(UDRIE), Bit 4(RXEN), Bit 3(TXEN), Bit 2(UCSZ2), Bit 1(RXB8), Bit 0(TXB8)
+			- Bits 3 & 4 are the only ones used
+				- Bit 4; RXEN (Receiver Enable)
+					- This bit is set to '1' when the USART receiver is enabled when it is needed for serial communication
+				- Bit 3; TXEN (Transmitter Enable)
+					- This bit is set to '1' when the USART transmitter is enabled when it is needed for parallel communication
+		- UCSRC; USART Control & Status Register C
+			- This register is used to control and read the status from Register C by USART
+			- The bits in this register are: Bit 7(URSEL), Bit 6(UMSEL), Bit 5(UPM1), Bit 4(UPM0), Bit 3(MSBS), Bit 2(UCSZ1), Bit 1(UCSZ0), Bit 0(UCPOL)
+			- Bits 2 & 1 are the only ones used
+				- Bit 2 & 1; UCSZ1 & UCSZ0 (Character Size)
+					- These two bits along with UCSZ2 in the UCSRB Register sets the number of data bits to be transferred
+					- The following options that is available are:	
+						- 5 - Bit; (UCSZ2 = 0, UCSZ1 = 0, UCSZ0 = 0)
+						- 6 - Bit; (UCSZ2 = 0, UCSZ1 = 0, UCSZ0 = 1)
+						- 7 - Bit; (UCSZ2 = 0, UCSZ1 = 1, UCSZ0 = 0)
+						- 8 - Bit; (UCSZ2 = 0, UCSZ1 = 1, UCSZ0 = 1)
+						- Reserved; (UCSZ2 = 1, UCSZ1 = 0, UCSZ0 = 0)
+						- Reserved ; (UCSZ2 = 1, UCSZ1 = 0, UCSZ0 = 1)	
+						- Reserved; (UCSZ2 = 1, UCSZ1 = 1, UCSZ0 = 0)
+						- 9 - Bit; (UCSZ2 = 1, UCSZ1 = 1, UCSZ0 = 1)
+					
+				- The option that will be used is the 8-bit one (Option 4)
+		- UBRR; USART Baud Rate Register
+			- A 16-bit register which is used to set the baud rate for the communication of bluetooth
+			- The baud rate is it referring to is the speed at which the data is transmitted
+			- Ex. Baud Rate of 9600 means the data is transferring at a speed of 9600 bits per second
+			- Both devices need to be set at a baud rate before communication and has to have the same speed in which the data is transferring with each other to prevent a loss of data
+			- Essentially, it is two 8-bit registers (UBRRH & UBRRL) combined to make one 16-bit register (UBRR)
+				- UBRRH: Bit 15(URSEL), Bit 14(-), Bit 13(-), Bit 12(-), Bit 11 to 8(UBRR)
+				- UBRRL: Bit 7 - 0(UBRR)
+			- Bits 11 to 0; USART Baud Rate Register/UBRR(11:0)
+				- Used to hold the value of the baud rate set for Serial Communication
+					- The UBRRH register holds the first four MSB bits 
+					- The UBRRL register hold the last eight LSB bits
+				- There is a formula to calculate the UBRR value for baud rate:
+					- 'UBRR = (Frequency of Crystal Oscillator / 16 * Baud Rate) - 1'
+					- Ex. UBRR = '(16 MHz / 16 * 9600) - 1' = '(16 * 1000000 Hz / 16 * 9600) - 1' = '103.16'
+						- In a hexadecimal value, it will be 'UBRR = 0x67;'
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+8. Dot Matrix Values:
+
+
+	1	    2		3	    4		5
+
+// 0b00010000; 0b00001000; 0b00000100; 0b00000010; 0b00000001; - Column Values
+// 0b11101111; 0b11110111; 0b11111011; 0b11111101; 0b11111110; - Row Values
+
+Dot Matrix is a 5x5 grid with LED's. The following Binary values are the column and row values. 
+
+|1.1|2.1|3.1|4.1|5.1|
+|1.2|2.2|3.2|4.2|5.2|
+|1.3|2.3|3.3|4.3|5.3|
+|1.4|2.4|3.4|4.4|5.4|
+|1.5|2.5|3.5|4.5|5.5|
+
+//----------------------------------------------------------------------------------------------------------------------------------------------\\
+
+
+
+
+
+
+				
