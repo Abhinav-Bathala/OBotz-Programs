@@ -180,6 +180,6 @@ int number[] = {
 
 <div align="center">
 
-Made with 🤖 by **Abhinav Bathala** &nbsp;·&nbsp; OBotz Levels 5, 6, & 7
+Made by **Abhinav Bathala** &nbsp;·&nbsp; OBotz Levels 5, 6, & 7
 
 </div>
