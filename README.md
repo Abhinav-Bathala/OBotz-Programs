@@ -31,7 +31,7 @@
 
 This repo contains all programs, reference guides, and notes written during the **OBotz Robotics Program** — a 7-level STEM curriculum focused on teaching robotics through hands-on experimentation and real-world embedded systems programming.
 
-Levels 5 and 6 of the program dive deep into **Embedded C** on AVR microcontroller boards (Uniko Dvi & Uniko Trini), moving from autonomous robot logic all the way to full embedded system applications like robotic arms, AC systems, and electronic lock systems.
+Levels 5, 6, and 7 of the program dive deep into **Embedded C** on AVR microcontroller boards (Uniko Dvi, Uniko Trini, and Uniko Chatur), moving from autonomous robot logic all the way to full embedded system applications like robotic arms, AC systems, and electronic lock systems.
 
 ---
 
@@ -41,8 +41,6 @@ Levels 5 and 6 of the program dive deep into **Embedded C** on AVR microcontroll
 - [Concepts Covered](#-concepts-covered)
 - [Key Functions](#-key-functions)
 - [Hardware & Components](#-hardware--components)
-- [Reference Values](#-reference-values)
-- [Project Structure](#-project-structure)
 - [About OBotz](#-about-obotz)
 
 ---
@@ -121,6 +119,7 @@ void antistepper()  { /* Reverse sequence for opposite direction */ }
 |-----------|-------------|
 | **Uniko Dvi** | AVR-based microcontroller board (Level 5) |
 | **Uniko Trini** | Modular board with plug-n-play peripherals (Level 6) |
+| **Uniko Chatur** | AVR-based microcontroller board (Level 7) |
 | **Servo Motors** | Angle-controlled via PWM (1–3 motors) |
 | **Stepper Motors** | Step-direction control via PORTD |
 | **IR Remote + TSOP** | 32-bit NEC protocol decoding |
