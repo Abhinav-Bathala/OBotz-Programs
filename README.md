@@ -17,7 +17,7 @@
 
 <img src="https://img.shields.io/badge/Language-Embedded%20C-blue?style=for-the-badge&logo=c&logoColor=white"/>
 <img src="https://img.shields.io/badge/Platform-AVR%20Microcontroller-red?style=for-the-badge&logo=arduino&logoColor=white"/>
-<img src="https://img.shields.io/badge/Program-OBotz%20Levels%205%20%26%206-orange?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Program-OBotz%20Levels%205%2C%206%2C%20%26%207-orange?style=for-the-badge"/>
 <img src="https://img.shields.io/badge/Status-Complete-brightgreen?style=for-the-badge"/>
 
 ---
