@@ -49,10 +49,11 @@ Levels 5 and 6 of the program dive deep into **Embedded C** on AVR microcontroll
 
 ## 🎯 Program Overview
 
-| Level | Focus | Board |
+| Level | Focus | Microcontroller |
 |-------|-------|-------|
-| **Level 5** | Autonomous Robots using Embedded C | Uniko Dvi |
-| **Level 6** | Embedded Systems & Industrial Robots | Uniko Trini |
+| **Level 5** | Autonomous Robots using Embedded C   | ATMega 32  |
+| **Level 6** | Embedded Systems & Industrial Robots | ATMega 324 |
+| **Level 7** | Embedded Systems & Humanoid Robots   | ATMega 328 |
 
 The programs in this repository span both levels, with increasing complexity — from basic register manipulation and ADC conversions to full ISR interrupt-driven control systems for servo arms, stepper motors, and wireless Bluetooth communication.
 
