@@ -223,7 +223,7 @@ ADCSRA = 0xC7;
 		Bit Position Macro:
 
 			- Command: "#define bitn(p) (0x01 << (p))"
-			- 'p' helps us to set the postition of the bit we would like to set or reset
+			- 'p' helps us to set the position of the bit we would like to set or reset
 			- In a program, we simply replace the 'p' with the bit number
 			- We can also write bitn(ADSC) to make it work on the ADSC bit of that specific register
 
